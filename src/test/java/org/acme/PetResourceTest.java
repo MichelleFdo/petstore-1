@@ -8,6 +8,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 public class PetResourceTest {
@@ -28,5 +30,26 @@ public class PetResourceTest {
 //    		      )
 //    		 );
     }
+
+    @Test
+    void getPets() {
+        given()
+                .when().get("/v1/pets")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("size()",notNullValue());
+    }
+
+    @Test
+    void searchPet() {
+        given()
+                .when().get("/v1/pets/{petId}")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("size()",notNullValue());
+    }
+
 
 }
