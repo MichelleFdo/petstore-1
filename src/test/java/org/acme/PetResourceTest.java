@@ -1,34 +1,25 @@
 package org.acme;
 
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
-import org.jose4j.json.internal.json_simple.JSONObject;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import java.util.HashMap;
+import java.util.Map;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.equalTo;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-public class PetResourceTest {
+class PetTypeResourceTest {
 
-	@Test
-    public void testPetEndpoint() {
-        given()
-          .when().get("/v1/pets")
-          .then()
-             .statusCode(200);
-//             .body(hasItem(
-// 		            allOf(
-//    		                hasEntry("pet_id", "1"),
-//    		                hasEntry("pet_type", "Dog"),
-//    		                hasEntry("pet_name", "Boola"),
-//    		                hasEntry("pet_age", "3")
-//    		            )
-//    		      )
-//    		 );
+    public void checkEquality(Map<String, Object> expected, JsonPath actual){
+        for(String path : expected.keySet()){
+            Assertions.assertEquals(expected.get(path), actual.get(path));
+        }
     }
 
     @Test
@@ -53,20 +44,33 @@ public class PetResourceTest {
 
     @Test
     void addPet() {
-        JSONObject requestParams = new JSONObject();
-        requestParams.put("petType", "Tiger");
+        Map<String, Object> jsonAsMap = new HashMap<>();
+        jsonAsMap.put("petId",5);
+        jsonAsMap.put("petName","Pie");
+        jsonAsMap.put("petAge",8);
+        jsonAsMap.put("petName", "Tiger");
 
-
-        given()
-                .contentType("application/json")  //another way to specify content type
-                .body(requestParams.toString())   // use jsonObj toString method
-                .when()
-                .post("/v1/pettypes/addpettype")
-                .then()
-                .assertThat()
-                .statusCode(201)
-                .body("size()",notNullValue());
+        Response response = given().contentType("application/json").body(jsonAsMap).when().post("/v1/pets/addpet");
+        Assertions.assertEquals(200, response.statusCode());
+        MatcherAssert.assertThat("application/json", equalTo(response.contentType()));
+        JsonPath jsonPath = response.jsonPath();
+        checkEquality(jsonAsMap, jsonPath);
+        System.out.println(response.jsonPath().prettyPrint());
     }
 
+    @Test
+    void updatePet() {
+        Map<String, Object> jsonAsMap = new HashMap<>();
+        jsonAsMap.put("petId",1);
+        jsonAsMap.put("petName","Boola");
+        jsonAsMap.put("petAge",10);
+        jsonAsMap.put("petType", "Dog");
 
+        Response response = given().contentType("application/json").body(jsonAsMap).when().post("/v1/pets/update");
+        Assertions.assertEquals(200, response.statusCode());
+        MatcherAssert.assertThat("application/json", equalTo(response.contentType()));
+        JsonPath jsonPath = response.jsonPath();
+        checkEquality(jsonAsMap, jsonPath);
+        System.out.println(response.jsonPath().prettyPrint());
+    }
 }
